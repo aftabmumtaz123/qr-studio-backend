@@ -13,9 +13,20 @@ const app = express();
 
 // Security and utility middlewares
 app.use(helmet());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://qr-studio-frontend-3nmi.vercel.app',
+  'https://qr-studio-frontend-3nmi-git-main-aftabmumtaz123s-projects.vercel.app'
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
