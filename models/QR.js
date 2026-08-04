@@ -28,6 +28,24 @@ const qrSchema = new mongoose.Schema({
     type: Object,
     default: {}
   },
+  cardTemplate: {
+    type: String,
+    default: 'modern'
+  },
+  cardStyle: {
+    type: Object,
+    default: {}
+  },
+  cardConfig: {
+    type: Object,
+    default: {}
+  },
+  mediaUrl: {
+    type: String
+  },
+  mediaType: {
+    type: String
+  },
   logo: {
     type: String
   },

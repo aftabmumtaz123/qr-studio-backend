@@ -24,6 +24,7 @@ app.use(morgan('dev'));
 
 const qrRoutes = require('./routes/qrRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const mediaRoutes = require('./routes/mediaRoutes');
 const { dynamicRedirect } = require('./controllers/qrController');
 
 // Routing setup
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/qr', qrRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/media', mediaRoutes);
 app.get('/d/:code', dynamicRedirect);
 
 // Advanced Error Handling

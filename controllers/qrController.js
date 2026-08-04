@@ -9,7 +9,7 @@ const generateCode = () => crypto.randomBytes(4).toString('hex');
 // @access  Public
 const createQR = async (req, res, next) => {
   try {
-    const { title, type, dynamic, destination, payload, style, logo } = req.body;
+    const { title, type, dynamic, destination, payload, style, logo, cardTemplate, cardStyle, cardConfig, mediaUrl, mediaType } = req.body;
 
     const qrData = {
       title,
@@ -18,7 +18,12 @@ const createQR = async (req, res, next) => {
       destination,
       payload,
       style,
-      logo
+      logo,
+      cardTemplate,
+      cardStyle,
+      cardConfig,
+      mediaUrl,
+      mediaType
     };
 
     if (qrData.dynamic) {
@@ -75,7 +80,7 @@ const getQRById = async (req, res, next) => {
 // @access  Public
 const updateQR = async (req, res, next) => {
   try {
-    const { title, destination, payload, style, logo } = req.body;
+    const { title, destination, payload, style, logo, cardTemplate, cardStyle, cardConfig, mediaUrl, mediaType } = req.body;
     
     const qr = await QR.findById(req.params.id);
 
@@ -85,6 +90,11 @@ const updateQR = async (req, res, next) => {
       qr.payload = payload !== undefined ? payload : qr.payload;
       qr.style = style !== undefined ? style : qr.style;
       qr.logo = logo !== undefined ? logo : qr.logo;
+      qr.cardTemplate = cardTemplate !== undefined ? cardTemplate : qr.cardTemplate;
+      qr.cardStyle = cardStyle !== undefined ? cardStyle : qr.cardStyle;
+      qr.cardConfig = cardConfig !== undefined ? cardConfig : qr.cardConfig;
+      qr.mediaUrl = mediaUrl !== undefined ? mediaUrl : qr.mediaUrl;
+      qr.mediaType = mediaType !== undefined ? mediaType : qr.mediaType;
 
       const updatedQR = await qr.save();
       res.json(updatedQR);
