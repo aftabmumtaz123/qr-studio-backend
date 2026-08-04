@@ -27,6 +27,7 @@ const uploadMedia = async (req, res, next) => {
       format: result.format,
       originalName: file.originalname,
     });
+    
   } catch (err) {
     console.error(err);
     next(err);
