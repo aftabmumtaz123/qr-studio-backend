@@ -156,18 +156,32 @@ const dynamicRedirect = async (req, res, next) => {
     const qr = await QR.findOne({ code });
 
     if (qr && qr.dynamic && qr.active !== false) {
-      // Create Analytics entry
-      await Analytics.create({
-        qrId: qr._id,
-        ip: req.ip || req.connection.remoteAddress,
-        browser: req.headers['user-agent'],
-        device: deviceBucket(req.headers['user-agent']),
-        referrer: req.headers['referer'] || req.headers['referrer'],
-      });
+      const ip = req.ip || req.connection?.remoteAddress || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+      const userAgent = req.headers['user-agent'] || '';
 
-      // Increment click count
-      qr.clicks += 1;
-      await qr.save();
+      // Avoid double-counting the same physical scan.
+      // Many mobile QR scanners / browsers fire the request twice within a couple of seconds.
+      const recentWindowMs = 8000; // 8 seconds
+      const recentCutoff = new Date(Date.now() - recentWindowMs);
+      const recentDuplicate = await Analytics.findOne({
+        qrId: qr._id,
+        ip,
+        scannedAt: { $gte: recentCutoff },
+      }).lean();
+
+      if (!recentDuplicate) {
+        await Analytics.create({
+          qrId: qr._id,
+          ip,
+          browser: userAgent,
+          device: deviceBucket(userAgent),
+          referrer: req.headers['referer'] || req.headers['referrer'],
+        });
+
+        // Increment click count only for a non-duplicate scan
+        qr.clicks = (qr.clicks || 0) + 1;
+        await qr.save();
+      }
 
       // Ensure URL has http protocol if it's a URL type
       let dest = qr.destination || '';

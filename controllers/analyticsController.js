@@ -19,10 +19,25 @@ const getLast7Days = () => {
 };
 
 const deviceBucket = (value = '') => {
-  const ua = value.toLowerCase();
+  const ua = (value || '').toLowerCase();
   if (!ua) return 'Unknown';
-  if (/tablet|ipad|android(?!.*mobile)/i.test(ua)) return 'Tablet';
-  if (/mobile|iphone|ipod|android/i.test(ua)) return 'Mobile';
+
+  // Tablets first (iPad, Android tablets, Kindle, etc.)
+  // Prefer explicit tablet signals; Android without "mobi"/"mobile" is usually a tablet.
+  if (
+    /ipad|tablet|playbook|silk|(android(?!.*mobi))/i.test(ua) ||
+    (/android/i.test(ua) && !/mobi|mobile|phone/i.test(ua))
+  ) {
+    return 'Tablet';
+  }
+
+  // Phones / mobile devices
+  if (
+    /mobi|iphone|ipod|android|blackberry|iemobile|opera mini|windows phone|webos|fennec|minimo|symbian|series60|nokia|samsung|lg |htc|mot-|sonyericsson/i.test(ua)
+  ) {
+    return 'Mobile';
+  }
+
   return 'Desktop';
 };
 
@@ -48,16 +63,39 @@ const getOverview = async (req, res, next) => {
       Analytics.find({}).sort({ scannedAt: -1 }).limit(500).lean(),
       QR.aggregate([{ $group: { _id: '$type', count: { $sum: 1 } } }, { $sort: { count: -1 } }]),
       Analytics.aggregate([
-        { $project: { deviceGroup: { $cond: [
-          { $and: [{ $ne: ['$device', null] }, { $ne: ['$device', ''] }] },
-          '$device',
-          { $cond: [
-            { $regexMatch: { input: { $ifNull: ['$browser', ''] }, regex: /tablet|ipad|android(?!.*mobile)/i } }, 'Tablet',
-            { $cond: [
-              { $regexMatch: { input: { $ifNull: ['$browser', ''] }, regex: /mobile|iphone|ipod|android/i } }, 'Mobile', 'Desktop'
-            ] }
-          ] }
-        ] } } },
+        {
+          $project: {
+            deviceGroup: {
+              $cond: [
+                { $and: [{ $ne: ['$device', null] }, { $ne: ['$device', ''] }] },
+                '$device',
+                {
+                  $cond: [
+                    {
+                      $or: [
+                        { $regexMatch: { input: { $ifNull: ['$browser', ''] }, regex: /ipad|tablet|playbook|silk/i } },
+                        {
+                          $and: [
+                            { $regexMatch: { input: { $ifNull: ['$browser', ''] }, regex: /android/i } },
+                            { $not: { $regexMatch: { input: { $ifNull: ['$browser', ''] }, regex: /mobi|mobile|phone/i } } }
+                          ]
+                        }
+                      ]
+                    },
+                    'Tablet',
+                    {
+                      $cond: [
+                        { $regexMatch: { input: { $ifNull: ['$browser', ''] }, regex: /mobi|iphone|ipod|android|blackberry|iemobile|opera mini|windows phone|webos/i } },
+                        'Mobile',
+                        'Desktop'
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
         { $group: { _id: '$deviceGroup', count: { $sum: 1 } } },
         { $sort: { count: -1 } }
       ]),
