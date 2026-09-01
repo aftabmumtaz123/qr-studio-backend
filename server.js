@@ -15,8 +15,7 @@ const app = express();
 app.use(helmet());
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://qr-studio-frontend-3nmi.vercel.app',
-  'https://qr-studio-frontend-3nmi-git-main-aftabmumtaz123s-projects.vercel.app'
+  'https://qr-studio-xi-three.vercel.app'
 ];
 
 app.use(cors({
