@@ -1,6 +1,7 @@
 const QR = require('../models/QR');
 const Analytics = require('../models/Analytics');
 const crypto = require('crypto');
+const { deviceBucket } = require('./analyticsController');
 
 const generateCode = () => crypto.randomBytes(4).toString('hex');
 
@@ -9,7 +10,7 @@ const generateCode = () => crypto.randomBytes(4).toString('hex');
 // @access  Public
 const createQR = async (req, res, next) => {
   try {
-    const { title, type, dynamic, destination, payload, style, logo, cardTemplate, cardStyle, cardConfig, mediaUrl, mediaType } = req.body;
+    const { title, type, dynamic, destination, payload, style, logo, cardTemplate, cardStyle, cardConfig, mediaUrl, mediaType, code } = req.body;
 
     const qrData = {
       title,
@@ -27,16 +28,23 @@ const createQR = async (req, res, next) => {
     };
 
     if (qrData.dynamic) {
-      let unique = false;
-      let newCode = '';
-      while (!unique) {
-        newCode = generateCode();
-        const existing = await QR.findOne({ code: newCode });
-        if (!existing) {
-          unique = true;
+      let requestedCode = typeof code === 'string' ? code.trim() : '';
+      if (requestedCode) {
+        const existing = await QR.findOne({ code: requestedCode });
+        if (existing) {
+          return res.status(409).json({ message: 'That dynamic URL alias is already in use. Change the title, destination, or custom alias.' });
         }
+        qrData.code = requestedCode;
+      } else {
+        let unique = false;
+        let newCode = '';
+        while (!unique) {
+          newCode = generateCode();
+          const existing = await QR.findOne({ code: newCode });
+          if (!existing) unique = true;
+        }
+        qrData.code = newCode;
       }
-      qrData.code = newCode;
     }
 
     const qr = await QR.create(qrData);
@@ -80,7 +88,7 @@ const getQRById = async (req, res, next) => {
 // @access  Public
 const updateQR = async (req, res, next) => {
   try {
-    const { title, destination, payload, style, logo, cardTemplate, cardStyle, cardConfig, mediaUrl, mediaType } = req.body;
+    const { title, destination, payload, style, logo, cardTemplate, cardStyle, cardConfig, mediaUrl, mediaType, active } = req.body;
     
     const qr = await QR.findById(req.params.id);
 
@@ -95,6 +103,7 @@ const updateQR = async (req, res, next) => {
       qr.cardConfig = cardConfig !== undefined ? cardConfig : qr.cardConfig;
       qr.mediaUrl = mediaUrl !== undefined ? mediaUrl : qr.mediaUrl;
       qr.mediaType = mediaType !== undefined ? mediaType : qr.mediaType;
+      qr.active = active !== undefined ? Boolean(active) : qr.active;
 
       const updatedQR = await qr.save();
       res.json(updatedQR);
@@ -110,6 +119,16 @@ const updateQR = async (req, res, next) => {
 // @desc    Delete QR
 // @route   DELETE /api/qr/:id
 // @access  Public
+const toggleQR = async (req, res, next) => {
+  try {
+    const qr = await QR.findById(req.params.id);
+    if (!qr) return res.status(404).json({ message: 'QR not found' });
+    qr.active = !qr.active;
+    await qr.save();
+    res.json(qr);
+  } catch (error) { next(error); }
+};
+
 const deleteQR = async (req, res, next) => {
   try {
     const qr = await QR.findById(req.params.id);
@@ -136,12 +155,13 @@ const dynamicRedirect = async (req, res, next) => {
     const code = req.params.code;
     const qr = await QR.findOne({ code });
 
-    if (qr && qr.dynamic) {
+    if (qr && qr.dynamic && qr.active !== false) {
       // Create Analytics entry
       await Analytics.create({
         qrId: qr._id,
         ip: req.ip || req.connection.remoteAddress,
-        browser: req.headers['user-agent'], 
+        browser: req.headers['user-agent'],
+        device: deviceBucket(req.headers['user-agent']),
         referrer: req.headers['referer'] || req.headers['referrer'],
       });
 
@@ -169,6 +189,7 @@ module.exports = {
   getQRs,
   getQRById,
   updateQR,
+  toggleQR,
   deleteQR,
   dynamicRedirect
 };

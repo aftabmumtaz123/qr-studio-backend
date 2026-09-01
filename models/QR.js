@@ -56,6 +56,10 @@ const qrSchema = new mongoose.Schema({
   clicks: {
     type: Number,
     default: 0
+  },
+  active: {
+    type: Boolean,
+    default: true
   }
 }, {
   timestamps: true

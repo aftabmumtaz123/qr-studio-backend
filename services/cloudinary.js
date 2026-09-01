@@ -6,6 +6,11 @@ const CLOUDINARY_URL = process.env.CLOUDINARY_URL || 'cloudinary://7889442563477
 // CLOUDINARY_URL = cloudinary://788944256347799:a_LYPnSxihBojBrHjhHaF6Do78w@oxyhybmn
 
 
+console.log({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  has_secret: !!process.env.CLOUDINARY_API_SECRET,
+});
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
