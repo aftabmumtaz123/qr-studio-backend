@@ -11,7 +11,6 @@ connectDB();
 
 const app = express();
 
-// Security and utility middlewares
 app.use(helmet());
 const allowedOrigins = [
   'http://localhost:5173',
