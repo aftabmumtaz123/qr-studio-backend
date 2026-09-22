@@ -5,13 +5,17 @@ const {
   getQRs,
   getQRById,
   updateQR,
-  deleteQR
+  deleteQR,
+  toggleQR
 } = require('../controllers/qrController');
 
 // /api/qr
 router.route('/')
   .post(createQR)
   .get(getQRs);
+
+router.route('/:id/toggle')
+  .patch(toggleQR);
 
 router.route('/:id')
   .get(getQRById)
