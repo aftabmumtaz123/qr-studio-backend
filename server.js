@@ -27,8 +27,10 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// QR settings can contain a compressed logo data URL. Keep a generous limit
+// for legitimate QR payloads while preventing accidental giant requests.
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(morgan('dev'));
 
 const qrRoutes = require('./routes/qrRoutes');
