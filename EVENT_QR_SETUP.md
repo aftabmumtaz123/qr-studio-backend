@@ -1,22 +1,36 @@
 # LumaLink Event QR
 
-Event QR codes use an HTTPS landing page instead of embedding raw iCalendar text in the QR payload.
+Event QR codes are **static calendar QR codes**. The complete iCalendar event is embedded directly in the QR payload; there is no redirect, hosted event page, or public URL dependency.
 
 ## Flow
 
 1. User enters the event details.
-2. `POST /api/qr` creates a dynamic `EVENT` QR record.
-3. The server returns `publicUrl` such as `https://backend.example.com/event/abc123`.
-4. The QR encodes that short HTTPS URL.
-5. Samsung, Android, and iPhone scanners open the event landing page.
-6. The page provides an `.ics` calendar download and Google Calendar action.
+2. The frontend builds a compact `VCALENDAR` / `VEVENT` payload.
+3. The QR preview encodes that calendar payload directly.
+4. `POST /api/qr` stores the event as a non-dynamic QR and keeps the same calendar payload in `destination`.
+5. Samsung, Android, iPhone, or another QR reader decides whether to offer a calendar action for the decoded iCalendar content.
 
-## Production configuration
+## Compatibility-focused payload
 
-Set `PUBLIC_BASE_URL` on the backend to the public HTTPS origin of the backend, for example:
+The generated event contains only the fields needed for a useful single event:
 
-`PUBLIC_BASE_URL=https://your-backend.example.com`
+- `BEGIN:VCALENDAR`
+- `VERSION:2.0`
+- `PRODID`
+- `BEGIN:VEVENT`
+- `UID`
+- `DTSTAMP`
+- `DTSTART` / `DTEND` in UTC
+- `SUMMARY`
+- optional `LOCATION`
+- optional `DESCRIPTION`
+- `END:VEVENT`
+- `END:VCALENDAR`
 
-If omitted, the server falls back to the request origin.
+Lines use CRLF endings and are folded at 75 UTF-8 octets for stricter iCalendar parsers.
 
-The frontend should have `VITE_SERVER_URL` pointing at the same public backend origin so the unsaved Event preview uses the correct host.
+## Scan-safety guidance
+
+Event payloads are longer than URL payloads. Keep descriptions short, use a light background with strong contrast, preserve a generous quiet zone, and keep center logos small. The client Scan Safety panel also reports Event payload size and warns when the payload becomes dense.
+
+The score is a design heuristic, not a guaranteed probability of successful scanning. Actual behavior still depends on the phone, camera, scanner, calendar app, lighting, display/print size, and QR styling.
