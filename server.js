@@ -37,7 +37,7 @@ const qrRoutes = require('./routes/qrRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const mediaRoutes = require('./routes/mediaRoutes');
 const shortURLRoutes = require('./routes/shortURLRoutes');
-const { dynamicRedirect } = require('./controllers/qrController');
+const { dynamicRedirect, eventLanding, eventICS } = require('./controllers/qrController');
 const { shortRedirect } = require('./controllers/shortURLController');
 
 // Routing setup
@@ -49,6 +49,8 @@ app.use('/api/qr', qrRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/media', mediaRoutes);
 app.use('/api/short-urls', shortURLRoutes);
+app.get('/event/:code.ics', eventICS);
+app.get('/event/:code', eventLanding);
 app.get('/d/:code', dynamicRedirect);
 app.get('/s/:code', shortRedirect);
 

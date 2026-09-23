@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { 
+const {
   createQR,
   getQRs,
   getQRById,
@@ -14,13 +14,12 @@ router.route('/')
   .post(createQR)
   .get(getQRs);
 
+router.route('/:id/toggle')
+  .patch(toggleQR);
+
 router.route('/:id')
   .get(getQRById)
   .put(updateQR)
   .delete(deleteQR);
-
-// Toggle dynamic QR active/inactive state
-router.route('/:id/toggle')
-  .patch(toggleQR);
 
 module.exports = router;
