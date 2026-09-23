@@ -86,7 +86,11 @@ const createQR = async (req, res, next) => {
     };
 
     if (qrData.dynamic) {
-      let requestedCode = typeof code === 'string' ? code.trim() : '';
+      // Normalize custom aliases server-side as well: lowercase and remove whitespace.
+      let requestedCode = typeof code === 'string' ? code.trim().toLowerCase().replace(/\s+/g, '') : '';
+      if (requestedCode && !/^[a-z0-9_-]{3,40}$/.test(requestedCode)) {
+        return res.status(400).json({ message: 'Alias must be 3–40 characters using lowercase letters, numbers, hyphens, or underscores. Spaces and uppercase letters are not allowed.' });
+      }
       if (requestedCode) {
         const existing = await QR.findOne({ code: requestedCode });
         if (existing) {
