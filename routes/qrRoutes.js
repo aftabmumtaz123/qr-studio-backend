@@ -5,6 +5,7 @@ const {
   getQRs,
   getQRById,
   updateQR,
+  toggleQR,
   deleteQR
 } = require('../controllers/qrController');
 
@@ -17,5 +18,9 @@ router.route('/:id')
   .get(getQRById)
   .put(updateQR)
   .delete(deleteQR);
+
+// Toggle dynamic QR active/inactive state
+router.route('/:id/toggle')
+  .patch(toggleQR);
 
 module.exports = router;
