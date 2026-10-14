@@ -12,20 +12,20 @@ connectDB();
 const app = express();
 
 app.use(helmet());
-const allowedOrigins = [
-  "https://qr-studio-xi-three.vercel.app",
-  "http://localhost:5173",
-];
+// const allowedOrigins = [
+//   "https://qr-studio-xi-three.vercel.app",
+//   "http://localhost:5173",
+// ];
 
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+// app.use(
+//   cors({
+//     origin: allowedOrigins,
+//     credentials: true,
+//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+//     allowedHeaders: ["Content-Type", "Authorization"],
+//   })
+// );
 // QR settings can contain a compressed logo data URL. Keep a generous limit
 // for legitimate QR payloads while preventing accidental giant requests.
 app.use(express.json({ limit: '15mb' }));
